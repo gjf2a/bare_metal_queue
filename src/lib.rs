@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 
+#[derive(Clone, Copy, Debug)]
 pub struct BareMetalQueue<T, const MAX_STORED: usize> {
     array: [T; MAX_STORED],
     start: usize,
