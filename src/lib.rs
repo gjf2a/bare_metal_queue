@@ -2,15 +2,22 @@
 
 use core::ops::Index;
 
-pub struct BareMetalQueue<T, const MAX_STORED: usize> {
+#[derive(Copy, Clone, Debug)]
+pub struct BareMetalQueue<T: Default, const MAX_STORED: usize> {
     array: [T; MAX_STORED],
     start: usize,
     size: usize,
 }
 
+impl<T: Copy + Clone + Default, const MAX_STORED: usize> Default for BareMetalQueue<T, MAX_STORED> {
+    fn default() -> Self {
+        Self { array: [T::default(); MAX_STORED], start: Default::default(), size: Default::default() }
+    }
+}
+
 impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalQueue<T, MAX_STORED> {
     pub fn new() -> Self {
-        Self {array: [T::default(); MAX_STORED], start: 0, size: 0}
+        Self::default()
     }
 
     pub fn len(&self) -> usize {
@@ -41,7 +48,7 @@ impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalQueue<T, MAX_
     }
 }
 
-impl<T, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
+impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
