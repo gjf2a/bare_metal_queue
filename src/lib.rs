@@ -1,15 +1,23 @@
 #![cfg_attr(not(test), no_std)]
 
-#[derive(Clone, Copy, Debug)]
-pub struct BareMetalQueue<T, const MAX_STORED: usize> {
+use core::ops::Index;
+
+#[derive(Copy, Clone, Debug)]
+pub struct BareMetalQueue<T: Default, const MAX_STORED: usize> {
     array: [T; MAX_STORED],
     start: usize,
     size: usize,
 }
 
+impl<T: Copy + Clone + Default, const MAX_STORED: usize> Default for BareMetalQueue<T, MAX_STORED> {
+    fn default() -> Self {
+        Self { array: [T::default(); MAX_STORED], start: Default::default(), size: Default::default() }
+    }
+}
+
 impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalQueue<T, MAX_STORED> {
     pub fn new() -> Self {
-        Self {array: [T::default(); MAX_STORED], start: 0, size: 0}
+        Self::default()
     }
 
     pub fn len(&self) -> usize {
@@ -84,6 +92,14 @@ impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalStack<T, MAX_
     }
 }
 
+impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.array[(self.start + index) % self.array.len()]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,11 +115,27 @@ mod tests {
             assert_eq!(q.len(), i + 1);
         }
         assert!(!q.is_empty());
+
+        for i in 0..TEST_SIZE {
+            assert_eq!(i, q[i]);
+        }
+
         for i in 0..TEST_SIZE {
             assert_eq!(q.len(), TEST_SIZE - i);
             assert_eq!(q.dequeue(), i);
         }
         assert!(q.is_empty());
+
+        for i in 0..TEST_SIZE {
+            q.enqueue(i);
+        }
+        for i in 0..TEST_SIZE / 2 {
+            q.dequeue();
+            q.enqueue(i + TEST_SIZE);
+        }
+        for i in 0..q.len() {
+            assert_eq!(i + TEST_SIZE / 2, q[i]);
+        }
     }
 
     #[test]
