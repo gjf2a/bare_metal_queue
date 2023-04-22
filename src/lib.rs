@@ -52,6 +52,7 @@ impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalQueue<T, MAX_
     }
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct BareMetalStack<T, const MAX_STORED: usize> {
     array: [T; MAX_STORED],
     top: usize,
