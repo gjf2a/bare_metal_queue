@@ -9,6 +9,14 @@ pub struct BareMetalQueue<T: Default, const MAX_STORED: usize> {
     size: usize,
 }
 
+impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.array[(self.start + index) % self.array.len()]
+    }
+}
+
 impl<T: Copy + Clone + Default, const MAX_STORED: usize> Default for BareMetalQueue<T, MAX_STORED> {
     fn default() -> Self {
         Self { array: [T::default(); MAX_STORED], start: Default::default(), size: Default::default() }
@@ -58,6 +66,12 @@ pub struct BareMetalStack<T, const MAX_STORED: usize> {
     top: usize,
 }
 
+impl<T: Copy + Clone + Default, const MAX_STORED: usize> Default for BareMetalStack<T, MAX_STORED> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalStack<T, MAX_STORED> {
     pub fn new() -> Self {
         Self {array: [T::default(); MAX_STORED], top: 0}
@@ -93,11 +107,12 @@ impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalStack<T, MAX_
     }
 }
 
-impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
+
+impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalStack<T, MAX_STORED> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
-        &self.array[(self.start + index) % self.array.len()]
+        &self.array[self.top - index - 1]
     }
 }
 
