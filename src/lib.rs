@@ -1,15 +1,20 @@
 #![cfg_attr(not(test), no_std)]
 
 use core::ops::Index;
+use trait_set::trait_set;
+
+trait_set! {
+    pub trait Entry = Default + Copy + Clone;
+}
 
 #[derive(Copy, Clone, Debug)]
-pub struct BareMetalQueue<T: Default, const MAX_STORED: usize> {
+pub struct BareMetalQueue<T: Entry, const MAX_STORED: usize> {
     array: [T; MAX_STORED],
     start: usize,
     size: usize,
 }
 
-impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
+impl<T: Entry, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -17,13 +22,13 @@ impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX
     }
 }
 
-impl<T: Copy + Clone + Default, const MAX_STORED: usize> Default for BareMetalQueue<T, MAX_STORED> {
+impl<T: Entry, const MAX_STORED: usize> Default for BareMetalQueue<T, MAX_STORED> {
     fn default() -> Self {
         Self { array: [T::default(); MAX_STORED], start: Default::default(), size: Default::default() }
     }
 }
 
-impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalQueue<T, MAX_STORED> {
+impl <T: Entry, const MAX_STORED: usize> BareMetalQueue<T, MAX_STORED> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -57,6 +62,20 @@ impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalQueue<T, MAX_
             panic!("Queue is empty");
         }
         self.array[self.start]
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        (0..self.size).map(|i| &self[i])
+    }
+}
+
+impl<T: Entry, const MAX_STORED: usize> FromIterator<T> for BareMetalQueue<T, MAX_STORED> {
+    fn from_iter<V: IntoIterator<Item = T>>(iter: V) -> Self {
+        let mut result = Self::new();
+        for value in iter {
+            result.enqueue(value);
+        }
+        result
     }
 }
 
@@ -107,7 +126,7 @@ impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalStack<T, MAX_
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
-        self.array.iter()
+        (0..self.top).rev().map(|i| &self.array[i])
     }
 }
 
@@ -117,6 +136,16 @@ impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalStack<T, MAX
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.array[self.top - index - 1]
+    }
+}
+
+impl<T: Entry, const MAX_STORED: usize> FromIterator<T> for BareMetalStack<T, MAX_STORED> {
+    fn from_iter<V: IntoIterator<Item = T>>(iter: V) -> Self {
+        let mut result = Self::new();
+        for value in iter {
+            result.push(value);
+        }
+        result
     }
 }
 
@@ -213,6 +242,22 @@ mod tests {
         }
         for x in (1..5).rev() {
             assert_eq!(x, stack.pop());
+        }
+    }
+
+    #[test]
+    fn queue_iter_test() {
+        let q = (0..10).collect::<BareMetalQueue<usize, 20>>();
+        for (i, v) in q.iter().enumerate() {
+            assert_eq!(i, *v);
+        }
+    }
+
+    #[test]
+    fn stack_iter_test() {
+        let s = (0..10).rev().collect::<BareMetalStack<usize, 20>>();
+        for (i, v) in s.iter().enumerate() {
+            assert_eq!(i, *v);
         }
     }
 }
