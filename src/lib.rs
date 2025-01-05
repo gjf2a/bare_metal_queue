@@ -46,6 +46,10 @@ impl <T: Copy + Clone + Default, const MAX_STORED: usize> BareMetalQueue<T, MAX_
         self.size -= 1;
         result
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.array.iter()
+    }
 }
 
 impl<T: Default, const MAX_STORED: usize> Index<usize> for BareMetalQueue<T, MAX_STORED> {
